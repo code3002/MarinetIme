@@ -32,12 +32,8 @@ export function createApp() {
   app.use("/api/drills", drillsRouter);
   app.use("/api/compliance", complianceRouter);
   app.use(express.static(frontendDistPath));
-  app.get("*", (req, res, next) => {
-    if (req.path.startsWith("/api")) {
-      return next();
-    }
-
-    return res.sendFile(frontendIndexPath);
+  app.get(/^(?!\/api).*$/, (_req, res) => {
+    res.sendFile(frontendIndexPath);
   });
   app.use(errorHandler);
 
