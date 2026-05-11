@@ -80,6 +80,15 @@ maintenanceRouter.patch("/:id", async (req, res, next) => {
   }
 });
 
+maintenanceRouter.get("/:id/comments", async (req, res) => {
+  const comments = await prisma.maintenanceComment.findMany({
+    where: { taskId: req.params.id },
+    include: { author: { select: { id: true, name: true } } },
+    orderBy: { createdAt: "asc" }
+  });
+  res.json(comments);
+});
+
 maintenanceRouter.post("/:id/comments", async (req, res, next) => {
   try {
     const input = z.object({ body: z.string().min(1) }).parse(req.body);

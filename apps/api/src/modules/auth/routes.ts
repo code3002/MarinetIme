@@ -60,3 +60,13 @@ authRouter.get("/me", requireAuth, async (req, res) => {
 
   res.json(user);
 });
+
+authRouter.get("/crew", requireAuth, async (_req, res) => {
+  const crew = await prisma.user.findMany({
+    where: { role: "CREW" },
+    select: { id: true, name: true, email: true, role: true, shipId: true },
+    orderBy: { name: "asc" }
+  });
+
+  res.json(crew);
+});
