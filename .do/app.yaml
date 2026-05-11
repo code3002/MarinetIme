@@ -7,8 +7,7 @@ services:
       repo: code3002/MarinetIme
       branch: main
       deploy_on_push: true
-    build_command: npm run build --workspace packages/shared && npx prisma generate --schema=apps/api/prisma/schema.prisma && npm run build --workspace apps/web && npm run build --workspace apps/api
-    run_command: node apps/api/dist/src/server.js
+    dockerfile_path: Dockerfile
     http_port: 8080
     instance_size_slug: basic-xxs
     instance_count: 1
@@ -25,6 +24,3 @@ services:
       - key: JWT_SECRET
         scope: RUN_AND_BUILD_TIME
         type: SECRET
-      - key: CLIENT_URL
-        value: ${APP_URL}
-        scope: RUN_AND_BUILD_TIME
