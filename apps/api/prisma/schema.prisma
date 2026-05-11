@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  CREW
+}
+
+enum MaintenanceStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum DrillStatus {
+  SCHEDULED
+  COMPLETED
+  MISSED
+}
+
+model User {
+  id                 String               @id @default(cuid())
+  name               String
+  email              String               @unique
+  passwordHash       String
+  role               Role                 @default(CREW)
+  shipId             String?
+  ship               Ship?                @relation(fields: [shipId], references: [id])
+  assignedTasks      MaintenanceTask[]    @relation("AssignedMaintenance")
+  comments           MaintenanceComment[]
+  drillAttendances   DrillAttendance[]
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+}
+
+model Ship {
+  id               String            @id @default(cuid())
+  name             String
+  imoNumber        String            @unique
+  status           String            @default("ACTIVE")
+  crew             User[]
+  maintenanceTasks MaintenanceTask[]
+  drills           SafetyDrill[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+model MaintenanceTask {
+  id             String               @id @default(cuid())
+  title          String
+  description    String
+  status         MaintenanceStatus    @default(PENDING)
+  dueDate        DateTime
+  completedAt    DateTime?
+  shipId         String
+  ship           Ship                 @relation(fields: [shipId], references: [id], onDelete: Cascade)
+  assignedToId   String?
+  assignedTo     User?                @relation("AssignedMaintenance", fields: [assignedToId], references: [id])
+  comments       MaintenanceComment[]
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+}
+
+model MaintenanceComment {
+  id        String          @id @default(cuid())
+  body      String
+  taskId    String
+  task      MaintenanceTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User            @relation(fields: [authorId], references: [id])
+  createdAt DateTime        @default(now())
+}
+
+model SafetyDrill {
+  id            String            @id @default(cuid())
+  title         String
+  type          String
+  status        DrillStatus       @default(SCHEDULED)
+  scheduledDate DateTime
+  completedAt   DateTime?
+  shipId        String
+  ship          Ship              @relation(fields: [shipId], references: [id], onDelete: Cascade)
+  attendances   DrillAttendance[]
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+}
+
+model DrillAttendance {
+  id         String      @id @default(cuid())
+  drillId    String
+  drill      SafetyDrill @relation(fields: [drillId], references: [id], onDelete: Cascade)
+  crewId     String
+  crew       User        @relation(fields: [crewId], references: [id])
+  attended   Boolean     @default(false)
+  submittedAt DateTime?
+
+  @@unique([drillId, crewId])
+}
